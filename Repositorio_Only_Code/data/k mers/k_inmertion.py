@@ -1,5 +1,5 @@
 # Python 3.11.5
-# FILE: CNN_pro.py
+# FILE: k_mers.py
 # AUTHOR: José Luis López Carmona
 # CREATE DATE: 27/01/2024
 # Libraries
@@ -56,6 +56,8 @@ def make_to_kmer_list (k,alphabet):
     return(return_value)
 
 ##############################################################################
+
+Standard
 def simple_normalize (vector):
     # Vector type as np.array
     maximum = np.max(vector)
@@ -63,6 +65,8 @@ def simple_normalize (vector):
     return(return_value)
 
 ##############################################################################
+
+# Read fasta
 def read_fasta(fasta_file_path):
     sequences = {}
     with open(fasta_file_path, 'r') as file:
@@ -70,22 +74,19 @@ def read_fasta(fasta_file_path):
         sequence_data = []
         for line in file:
             line = line.strip()
-            if line.startswith(">"):  # Encuentra un encabezado de secuencia
+            if line.startswith(">"):  
                 if sequence_id:
-                    # Almacena la secuencia anterior
                     sequences[sequence_id] = ''.join(sequence_data)
-                # Reinicia los datos de la secuencia
                 sequence_id = line[1:]  # Excluye el '>'
                 sequence_data = []
             else:
-                # Continua acumulando la secuencia
                 sequence_data.append(line)
-        # Asegurarse de guardar la última secuencia leída
         if sequence_id:
             sequences[sequence_id] = ''.join(sequence_data)
     return sequences
 
 ################################################################################
+
 def split_sequence_in_chunks(sequence, chunk_size):
     # Partition of k length
     return [sequence[i:i+chunk_size] for i in range(0, len(sequence), chunk_size)]
@@ -123,14 +124,14 @@ def vector_define(sequence, chunk_size):
         
         
 
-# Read fasta 
+# Read fasta in my own fasta
 fasta_file_path = "data\Milseq.fasta"
 fasta_sequences = read_fasta(fasta_file_path)
 
-# 2 printed
-for seq_id in list(fasta_sequences)[:2]:  # Solo los primeros 2 para no ser demasiado extenso
+# Example
+for seq_id in list(fasta_sequences)[:2]:  
     print(f"ID: {seq_id}")
-    print(f"Sequence: {fasta_sequences[seq_id][:60]}...")  # Mostrar solo los primeros 60 caracteres
+    print(f"Sequence: {fasta_sequences[seq_id][:60]}...")  
     print("\n")
 
 ID1 = list(fasta_sequences)[0]
@@ -139,8 +140,8 @@ Split = split_sequence_in_chunks(sequence_ID1, 5)
 V_ID1 = vector_define(sequence_ID1,5)
 N_ID1 = simple_normalize(V_ID1)
 
-
-k = 3
+# Part to use code
+k = 3  # decide k number
 alphabet = ["A","C","G","T"]
 A13 = make_upto_kmer_list([1,2,3],alphabet)
 A_3 = make_to_kmer_list(3,alphabet)
