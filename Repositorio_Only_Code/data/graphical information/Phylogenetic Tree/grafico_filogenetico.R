@@ -1,11 +1,17 @@
+# R 4.3.2.
+# FILE: grafico_filogenetico.R
+# AUTHOR: José Luis López Carmona
+# CREATE DATE: 29/05/2024
+
+# Libraries
 library(readr)  
 library(dplyr)  
 
-# Leer los datos
+# Read data
 input_micro <- "C:/Users/JoseLuisLopezCarmona/Documents/MCD/TFM/Codigo/datos/taxonomy.csv"
 datos <- read_csv(input_micro)
 
-# Excluyendo la primera columna de datos
+# Reindex
 datos <- datos[, -1]
 datos <- datos %>% distinct()
 etiquetas <- datos$GENUS
@@ -13,7 +19,7 @@ datos <- datos %>% mutate(across(where(is.character), as.factor) %>%
                             mutate(across(where(is.factor), as.integer)))
 row.names(datos) <- etiquetas
 
-# Distancia
+# Distance 
 distancia <- dist(datos, method = "euclidean")
 cluster <- hclust(distancia)
 
@@ -22,11 +28,12 @@ library(ggplot2)
 dend_plot <- fviz_dend(cluster, k = 100, cex = 0.55, type = "circular", lwd = 1, 
                        xlab = "", ylab = "", repel = FALSE)
 dend_plot <- dend_plot + theme(
-  axis.title.y = element_blank(),  # Elimina el título del eje Y
-  axis.text.y = element_blank(),   # Elimina las etiquetas del eje Y
-  axis.ticks.y = element_blank()   # Elimina las marcas del eje Y
+  axis.title.y = element_blank(),  
+  axis.text.y = element_blank(),   
+  axis.ticks.y = element_blank()   
 )
 
+# Explivative circles:
 # Phylum 1
 dend_plot <- dend_plot +
   geom_point(aes(x = -1.8, y = 103), color = "black", size = 4) +
@@ -49,19 +56,5 @@ dend_plot <- dend_plot +
   annotate("segment", x = 1, xend = 97, y = 5, yend = 5, colour = "blue", size = 3, alpha = 0.2)
 
 
-# Mostrar el gráfico modificado
+# Print plot
 print(dend_plot)
-
-#-------------------------------------------------------------------------------#
-#-------------------------------------------------------------------------------#
-
-library(readr) 
-
-# Leer los datos
-input_micro <- "C:\\Users\\JoseLuisLopezCarmona\\Documents\\MCD\\TFM\\Codigo\\datos\\AMPk3.csv"
-ampk3 <- read_csv(input_micro)
-
-
-
-
-
