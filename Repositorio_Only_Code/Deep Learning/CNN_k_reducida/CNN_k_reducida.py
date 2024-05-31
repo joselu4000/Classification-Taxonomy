@@ -1,5 +1,5 @@
 # Python 3.11.5.
-# FILE: CNN_propia.py
+# FILE: CNN_k_reducida.py
 # AUTHOR: José Luis López Carmona
 # CREATE DATE: 17/04/2024
 
@@ -16,62 +16,60 @@ import matplotlib.pyplot as plt
 
 ###############################################################################
 ###############################################################################
+
 import time
 
-# Guarda el tiempo de inicio
+# Saving initial time
 start_time = time.time()
 
 ################################################################################
 ################################################################################
 def load_data(input_file):
-    # Leer el archivo CSV, usando la primera columna (seq_id) como índice
+    # Read CSV
     data = pd.read_csv(input_file)
     
-    # Extraer y limpiar los identificadores de la columna 'seq_id'
+    # Clean
     labels = data['seq_id'].str.split('_').str[1]
     
-    # Establecer los identificadores limpios como índice del DataFrame
+    # Reindex
     data.set_index(labels, inplace=True)
     
-    # Eliminar la columna original 'seq_id' ya que ahora es el índice
+    # Deleta last index
     data.drop('seq_id', axis=1, inplace=True)
     
-    # Convertir todas las columnas restantes a numérico, gestionando errores por si acaso
+    # Convert the rest of column to numeric
     data = data.apply(pd.to_numeric, errors='coerce')
 
     return labels, data
 
 def normalize (input_data):
-    # Vector type as np.array
     maximum = np.max(input_data)
     data_normalize = input_data/maximum
     return(data_normalize)
 
 def apply_pca(data, variance_threshold=0.95):
-    # Aplicación de PCA
-    pca = PCA(n_components=variance_threshold)  # Ajusta este valor según la varianza deseada
+    # PCA application
+    pca = PCA(n_components=variance_threshold)  
     principal_components = pca.fit_transform(data)
     print(f"Se conservaron {pca.n_components_} componentes principales que explican al menos {variance_threshold * 100}% de la varianza total.")
     return principal_components
 
 def create_model(nb_classes, input_length, input_features):
+    # Build network and compile
     model = Sequential([
-        # Primera capa convolucional
+        # 
         Conv1D(16, 3, padding='same', activation='relu', input_shape=(input_length, input_features)),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Segunda capa convolucional
+        #
         Conv1D(32, 3, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Tercera capa convolucional
+       #
         Conv1D(64, 3, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Aplanamiento y capa densa
+        #
         Flatten(),
         Dense(256, activation='relu'),
         Dropout(0.5),
@@ -98,7 +96,7 @@ def split (n,data_n, y_encoded):
 
 def train_and_plot_metrics(model, X_train, X_test, y_train, y_test, 
                            epochs=100, batch_size=20):
-    # Entrenamiento del modelo
+    # Train and history
     history = model.fit(
         X_train, y_train,
         epochs=epochs,
@@ -107,7 +105,7 @@ def train_and_plot_metrics(model, X_train, X_test, y_train, y_test,
         verbose=1
     )
 
-    # Datos guardados
+    # Saving metrics
     metrics = {
         'loss': history.history['loss'],
         'val_loss': history.history['val_loss'],
@@ -125,10 +123,11 @@ def train_and_plot_metrics(model, X_train, X_test, y_train, y_test,
 
 ##################################################################################
 ##################################################################################
+
 def plottings(metrics):
     plt.figure(figsize=(20, 6))
 
-    # Gráfico de la pérdida de entrenamiento y validación
+    # Loss train and test
     plt.subplot(1, 5, 1)
     plt.plot(metrics['loss'], label='Pérdida de Entrenamiento')
     plt.plot(metrics['val_loss'], label='Pérdida de Validación')
@@ -137,7 +136,7 @@ def plottings(metrics):
     plt.ylabel('Pérdida')
     plt.legend()
 
-    # Gráfico de la accuracy de entrenamiento y validación
+    # Accuracy train and test
     plt.subplot(1, 5, 2)
     plt.plot(metrics['accuracy'], label='Accuracy de Entrenamiento')
     plt.plot(metrics['val_accuracy'], label='Accuracy de Validación')
@@ -146,7 +145,7 @@ def plottings(metrics):
     plt.ylabel('Accuracy')
     plt.legend()
 
-    # Gráfico de la precisión de entrenamiento y validación
+    # Precision train and test
     plt.subplot(1, 5, 3)
     plt.plot(metrics['precision'], label='Precisión de Entrenamiento')
     plt.plot(metrics['val_precision'], label='Precisión de Validación')
@@ -155,7 +154,7 @@ def plottings(metrics):
     plt.ylabel('Precisión')
     plt.legend()
 
-    # Gráfico de la recall de entrenamiento y validación
+    # Recall train and test
     plt.subplot(1, 5, 4)
     plt.plot(metrics['recall'], label='Recall de Entrenamiento')
     plt.plot(metrics['val_recall'], label='Recall de Validación')
@@ -164,7 +163,7 @@ def plottings(metrics):
     plt.ylabel('Recall')
     plt.legend()
 
-    # Gráfico de la F1-score de entrenamiento y validación
+    # F1-score train and test
     plt.subplot(1, 5, 5)
     plt.plot(metrics['f1_score'], label='F1-Score de Entrenamiento', linestyle='--')
     plt.plot(metrics['val_f1_score'], label='F1-Score de Validación', linestyle='--')
@@ -178,7 +177,7 @@ def plottings(metrics):
 
 
 def resumen(history):
-    # Obtener las métricas del historial
+    # Extracting metrics
     accuracy = history['accuracy']
     precision = history['precision']
     recall = history['recall']
@@ -191,7 +190,7 @@ def resumen(history):
     val_f1_score = history['val_f1_score']
     val_loss = history['val_loss']
 
-    # Calcular las medias y desviaciones estándar
+    # Statistics
     metrics_mean = {
         'accuracy': np.mean(accuracy),
         'precision': np.mean(precision),
@@ -218,32 +217,33 @@ def resumen(history):
         'val_loss': np.std(val_loss)
     }
 
-    # Crear un DataFrame de pandas
+    # DataFrame 
     df_mean = pd.DataFrame(metrics_mean, index=['Mean'])
     df_std = pd.DataFrame(metrics_std, index=['Std'])
 
-    # Combinar ambos DataFrames
+    # Combine
     df_summary = pd.concat([df_mean, df_std])
 
-    # Transponer para que las métricas estén en columnas
+    # Transpose cause by structure
     df_summary = df_summary.transpose()
 
-    # Imprimir el resumen por pantalla
+    # Print
     print("Resumen de métricas:")
     print(df_summary)
 
 ##################################################################################################
 ##################################################################################################
-# Definir el path del archivo de entrada
+
+# My own path, change
 input_file = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\AMPk7.csv'
 input_micro = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\taxonomy.csv'
 
-# Carga de labels y data
+# Labels and data
 labels, data = load_data(input_file)
 data_m = normalize(data)
 data_n = apply_pca(data_m)
 
-# Division de los datos 
+# Division data
 taxonomy = pd.read_csv(input_micro)
 Taxon_L = taxonomy.shape[1]
 clase = 'Genus'
@@ -256,13 +256,15 @@ if clase == 'Class':
     taxon = taxonomy.iloc[0:,2]
     classes = 3
 
-# Estableciendo 'ID' como índice en tax_label para usarlo en reindex
+# Reindex
 tax_label.set_index('Sequence', inplace=True)
-# Reordenar tax_label según labels
 tax_label_sorted = tax_label.reindex(labels)
+
+# Encoder
 label_encoder = LabelEncoder()
 encoded_labels = label_encoder.fit_transform(tax_label_sorted.values.ravel())
-# Convertir las etiquetas codificadas en one-hot encoding
+
+# One-hot encoding
 y_encoded = to_categorical(encoded_labels, num_classes=classes)
 
 # train/test y validacion
@@ -271,18 +273,18 @@ X_tT, y_tT, X_val, y_val = split(n,data_n,y_encoded)
 
 ##################################################################################################
 ##################################################################################################
-# Cross-validation a mano
+
+# Cross-validation by hand
 fold = 5
 for i in range(0,fold):
-    # Division de los datos
     X_train, y_train, X_test, y_test = split(0.2,X_tT,y_tT)
 
-    # Modelado
+    # Model
     length = X_train.shape[0]
     input_features = X_train.shape[1]
     model = create_model(nb_classes=classes,input_length=input_features,input_features=1)
 
-    # Entrenamiento y graficas resumen
+    # Train and summary
     history = train_and_plot_metrics(model, X_train, X_test, y_train, y_test, 
                                      epochs=30, batch_size=20)
 
@@ -291,13 +293,15 @@ for i in range(0,fold):
         H2 = pd.concat([H2,H1],axis=0)
     else:
         H2 = pd.DataFrame(history)
-
-# Here 
-
-# Resumen de los datos
+        
+# Summary
 resumen(H2)
 
-# Evaluar el modelo final en el conjunto de datos de validación
+# Final time for train
+elapsed_time = time.time() - start_time
+print(f"El script tardó {elapsed_time:.2f} segundos en completarse.")
+
+# Evaluation model by validation data
 evaluation = model.evaluate(X_val, y_val)
 evaluation_df = pd.DataFrame({
     "Metric": ["Loss", "Accuracy", "Precision", "Recall", "F1-Score"],
@@ -305,12 +309,6 @@ evaluation_df = pd.DataFrame({
 })
 print(evaluation_df)
 
-# Calcula el tiempo de ejecución
-elapsed_time = time.time() - start_time
-
-# Imprime el tiempo de ejecución
-print(f"El script tardó {elapsed_time:.2f} segundos en completarse.")
-
-# Resumen modelo y graficas
+# Summary and plots
 model.summary()
 plottings(history)
