@@ -1,3 +1,5 @@
+# Modified by: José Luis López Carmona
+
 from Bio import SeqIO
 import sys
 import random
@@ -35,4 +37,5 @@ for seq in records:
 			outputFileOrder.write(line.split("\n")[0]+","+ordine+"\n")
 			outputFileClass.write(line.split("\n")[0]+","+classe+"\n")
 
+# Use this code into bash
 # python etiqueta_kmers.py matrix_file.csv taxonomy.txt
