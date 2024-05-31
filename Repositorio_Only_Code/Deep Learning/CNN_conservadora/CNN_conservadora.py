@@ -1,5 +1,5 @@
 # Python 3.11.5
-# FILE: CNN_pro.py
+# FILE: CNN_conservadora.py
 # AUTHOR: José Luis López Carmona
 # CREATE DATE: 08/05/2024
 
@@ -17,61 +17,58 @@ import matplotlib.pyplot as plt
 
 ###############################################################################
 ###############################################################################
+
 import time
 
-# Guarda el tiempo de inicio
+# Save initial time
 start_time = time.time()
 
 ################################################################################
 ################################################################################
+
 def load_data(input_file):
-    # Leer el archivo CSV, usando la primera columna (seq_id) como índice
+    # Read CSV
     data = pd.read_csv(input_file)
     
-    # Extraer y limpiar los identificadores de la columna 'seq_id'
+    # Clean index
     labels = data['seq_id'].str.split('_').str[1]
     
-    # Establecer los identificadores limpios como índice del DataFrame
+    # Seq_id as index
     data.set_index(labels, inplace=True)
     
-    # Eliminar la columna original 'seq_id' ya que ahora es el índice
+    # Delete last index
     data.drop('seq_id', axis=1, inplace=True)
     
-    # Convertir todas las columnas restantes a numérico, gestionando errores por si acaso
+    # Rest columns as numeric
     data = data.apply(pd.to_numeric, errors='coerce')
 
     return labels, data
 
 def normalize (input_data):
-    # Vector type as np.array
     maximum = np.max(input_data)
     data_normalize = input_data/maximum
     return(data_normalize)
 
 def create_model(nb_classes, input_length, input_features):
+    # Build and compile of network
     model = Sequential([
-        # Primera capa convolucional
         Conv1D(5, 5, padding='same', activation='relu', 
                input_shape=(input_length, input_features)),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Segunda capa convolucional
+        #
         Conv1D(10, 5, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Tercera capa convolucional
+        # 
         Conv1D(15, 5, padding='same', activation='relu'),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
-        
-        # Aplanamiento y capa densa
+        # 
         Flatten(),
         Dense(500, activation='relu'),
         Dropout(0.5),
-        
-        # Capa de salida
+        # 
         Dense(nb_classes, activation='softmax')
     ])
 
@@ -95,7 +92,7 @@ def train_and_plot_metrics(model, X_train, X_test, y_train, y_test, epochs=100, 
     # Callback de EarlyStopping
     early_stopping = EarlyStopping(monitor='val_accuracy', patience=2, restore_best_weights=True, verbose=1)
 
-    # Entrenamiento del modelo con EarlyStopping
+    # Train
     history = model.fit(
         X_train, y_train,
         epochs=epochs,
@@ -105,7 +102,7 @@ def train_and_plot_metrics(model, X_train, X_test, y_train, y_test, epochs=100, 
         callbacks=[early_stopping]  
     )
 
-    # Datos guardados
+    # Saving metrics
     metrics = {
         'loss': history.history['loss'],
         'val_loss': history.history['val_loss'],
@@ -124,10 +121,11 @@ def train_and_plot_metrics(model, X_train, X_test, y_train, y_test, epochs=100, 
 
 ##################################################################################
 ##################################################################################
+
 def plottings(metrics):
     plt.figure(figsize=(20, 6))
 
-    # Gráfico de la pérdida de entrenamiento y validación
+    # Loss train and test
     plt.subplot(1, 5, 1)
     plt.plot(metrics['loss'], label='Pérdida de Entrenamiento')
     plt.plot(metrics['val_loss'], label='Pérdida de Validación')
@@ -136,7 +134,7 @@ def plottings(metrics):
     plt.ylabel('Pérdida')
     plt.legend()
 
-    # Gráfico de la accuracy de entrenamiento y validación
+    # Accuracy train and test
     plt.subplot(1, 5, 2)
     plt.plot(metrics['accuracy'], label='Accuracy de Entrenamiento')
     plt.plot(metrics['val_accuracy'], label='Accuracy de Validación')
@@ -145,7 +143,7 @@ def plottings(metrics):
     plt.ylabel('Accuracy')
     plt.legend()
 
-    # Gráfico de la precisión de entrenamiento y validación
+    # Precision train and test
     plt.subplot(1, 5, 3)
     plt.plot(metrics['precision'], label='Precisión de Entrenamiento')
     plt.plot(metrics['val_precision'], label='Precisión de Validación')
@@ -154,7 +152,7 @@ def plottings(metrics):
     plt.ylabel('Precisión')
     plt.legend()
 
-    # Gráfico de la recall de entrenamiento y validación
+    # Recall train and test
     plt.subplot(1, 5, 4)
     plt.plot(metrics['recall'], label='Recall de Entrenamiento')
     plt.plot(metrics['val_recall'], label='Recall de Validación')
@@ -163,7 +161,7 @@ def plottings(metrics):
     plt.ylabel('Recall')
     plt.legend()
 
-    # Gráfico de la F1-score de entrenamiento y validación
+    # F1-score train and test
     plt.subplot(1, 5, 5)
     plt.plot(metrics['f1_score'], label='F1-Score de Entrenamiento', linestyle='--')
     plt.plot(metrics['val_f1_score'], label='F1-Score de Validación', linestyle='--')
@@ -177,7 +175,7 @@ def plottings(metrics):
 
 
 def resumen(history):
-    # Obtener las métricas del historial
+    # Extracting metrics
     accuracy = history['accuracy']
     precision = history['precision']
     recall = history['recall']
@@ -190,7 +188,7 @@ def resumen(history):
     val_f1_score = history['val_f1_score']
     val_loss = history['val_loss']
 
-    # Calcular las medias y desviaciones estándar
+    # Statistic
     metrics_mean = {
         'accuracy': np.mean(accuracy),
         'precision': np.mean(precision),
@@ -217,32 +215,32 @@ def resumen(history):
         'val_loss': np.std(val_loss)
     }
 
-    # Crear un DataFrame de pandas
+    # Dataframe
     df_mean = pd.DataFrame(metrics_mean, index=['Mean'])
     df_std = pd.DataFrame(metrics_std, index=['Std'])
 
-    # Combinar ambos DataFrames
+    # Combined
     df_summary = pd.concat([df_mean, df_std])
 
-    # Transponer para que las métricas estén en columnas
+    # Transpose cause of structure
     df_summary = df_summary.transpose()
 
-    # Imprimir el resumen por pantalla
+    # Print
     print("Resumen de métricas:")
     print(df_summary)
 
 ##################################################################################################
 ##################################################################################################
 
-# Definir el path del archivo de entrada
+# My own path
 input_file = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\SGk3.csv'
 input_micro = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\taxonomy.csv'
 
-# Carga de labels y data
+# Labels and data
 labels, data = load_data(input_file)
 data_n = normalize(data)
 
-# Division de los datos 
+# Division data 
 taxonomy = pd.read_csv(input_micro)
 Taxon_L = taxonomy.shape[1]
 clase = 'Genus'
@@ -263,33 +261,36 @@ if clase == 'Family':
     taxon = taxonomy.iloc[0:,4]
     classes = 39
 
-# Estableciendo 'ID' como índice en tax_label para usarlo en reindex
+# Reindex
 tax_label.set_index('Sequence', inplace=True)
-# Reordenar tax_label según labels
 tax_label_sorted = tax_label.reindex(labels)
+
+# Encoder
 label_encoder = LabelEncoder()
 encoded_labels = label_encoder.fit_transform(tax_label_sorted.values.ravel())
-# Convertir las etiquetas codificadas en one-hot encoding
+
+# One-hot encoding
 y_encoded = to_categorical(encoded_labels, num_classes=classes)
 
-# train/test y validacion
+# train/test y validation
 n = 0.1
 X_tT, y_tT, X_val, y_val = split(n,data_n,y_encoded)
 
 ##################################################################################################
 ##################################################################################################
-# Cross-validation a mano
+
+# Cross-validation by hand
 fold = 5
 for i in range(0,fold):
     # Division de los datos
     X_train, y_train, X_test, y_test = split(0.2,X_tT,y_tT)
 
-    # Modelado
+    # Model
     length = X_train.shape[0]
     input_features = X_train.shape[1]
     model = create_model(nb_classes=classes,input_length=input_features,input_features=1)
 
-    # Entrenamiento y graficas resumen
+    # Train and summary
     history = train_and_plot_metrics(model, X_train, X_test, y_train, y_test, 
                                      epochs=30, batch_size=20)
 
@@ -299,10 +300,14 @@ for i in range(0,fold):
     else:
         H2 = pd.DataFrame(history)
 
-# Resumen de los datos
+# Final time of train
+elapsed_time = time.time() - start_time
+print(f"El script tardó {elapsed_time:.2f} segundos en completarse.")
+
+# Summary data
 resumen(H2)
 
-# Evaluar el modelo final en el conjunto de datos de validación
+# Evaluation model by validation data
 evaluation = model.evaluate(X_val, y_val)
 evaluation_df = pd.DataFrame({
     "Metric": ["Loss", "Accuracy", "Precision", "Recall", "F1-Score"],
@@ -310,12 +315,6 @@ evaluation_df = pd.DataFrame({
 })
 print(evaluation_df)
 
-# Calcula el tiempo de ejecución
-elapsed_time = time.time() - start_time
-
-# Imprime el tiempo de ejecución
-print(f"El script tardó {elapsed_time:.2f} segundos en completarse.")
-
-# Resumen modelo y graficas
+# Summary of network and plots
 model.summary()
 plottings(history)
