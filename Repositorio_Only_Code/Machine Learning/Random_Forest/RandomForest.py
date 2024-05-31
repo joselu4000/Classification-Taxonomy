@@ -1,3 +1,8 @@
+# Python 3.11.5
+# FILE: Random_Forest.py, 
+# AUTHOR: José Luis López Carmona
+# CREATE DATE: 21/05/2024
+
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -11,13 +16,13 @@ from imblearn.over_sampling import SMOTE
 ###############################################################################
 import time
 
-# Guarda el tiempo de inicio
+# Saving initial time
 start_time = time.time()
 
 ###############################################################################
 ###############################################################################
 
-# Función para cargar y preparar los datos
+# Load data
 def load_data(input_file):
     data = pd.read_csv(input_file)
     labels = data['seq_id'].str.split('_').str[1]
@@ -26,11 +31,11 @@ def load_data(input_file):
     data = data.apply(pd.to_numeric, errors='coerce')
     return labels, data
 
-# Función para normalizar los datos
+# Standard data
 def normalize(input_data):
     return input_data / np.max(input_data)
 
-# Función para preparar los datos según la taxonomía y clase seleccionada
+# Prepare and encoding
 def prepare_data(clase, taxonomy_file, labels, data):
     taxonomy = pd.read_csv(taxonomy_file)
     Taxon_L = taxonomy.shape[1]
@@ -45,18 +50,20 @@ def prepare_data(clase, taxonomy_file, labels, data):
     data_n = normalize(data)
     return data_n, y_encoded
 
-# Cargar y preparar los datos
+# My own paths
 input_file = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\SGk7.csv'
 input_micro = r'C:\Users\JoseLuisLopezCarmona\Documents\MCD\TFM\Codigo\datos\taxonomy.csv'
+
+# Labels, prepare and encoding
 labels, data = load_data(input_file)
 data_n, y_encoded = prepare_data('Genus', input_micro, labels, data)
 X_train, X_val, y_train, y_val = train_test_split(data_n, y_encoded, test_size=0.1, stratify=np.argmax(y_encoded, axis=1), random_state=42)
 
-# Aplicar SMOTE para equilibrar el conjunto de entrenamiento
+# SMOTE for balance division data
 smote = SMOTE(random_state=42)
 X_train, y_train = smote.fit_resample(X_train, y_train)
 
-# Definir la cuadrícula de parámetros para GridSearchCV 
+# Grid to search the best params
 param_grid = {
     'n_estimators': [100, 200],
     'max_features': ['sqrt', 'log2'],
@@ -65,20 +72,18 @@ param_grid = {
     'min_samples_leaf': [1, 2]
 }
 
-# Configurar y ejecutar GridSearchCV
+# Model, train, and metrics
 rf = RandomForestClassifier(random_state=42)
 grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=2, verbose=1, n_jobs=-1)
-grid_search.fit(X_train, np.argmax(y_train, axis=1))  # Fit using categorical labels
+grid_search.fit(X_train, np.argmax(y_train, axis=1))  
 
-# Obtener el mejor modelo y realizar predicciones sobre el conjunto de validación
 best_rf = grid_search.best_estimator_
-y_val_pred = best_rf.predict(X_val)  # Predict using the model
+y_val_pred = best_rf.predict(X_val)  
 
-# Convertir predicciones y verdaderas etiquetas de one-hot a categóricas
-y_val_dense = np.argmax(y_val, axis=1)  # Convertir verdaderas etiquetas
-y_val_pred_dense = y_val_pred  # Las predicciones ya están en formato categórico
+# Prediction
+y_val_dense = np.argmax(y_val, axis=1)  
+y_val_pred_dense = y_val_pred  
 
-# Generar y mostrar el reporte de clasificación
 print(best_rf)
 print("Mejores parámetros:", grid_search.best_params_)
 print("Reporte de clasificación en el conjunto de validación:\n",
